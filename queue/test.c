@@ -19,6 +19,7 @@ int flags = 0;
 void* thrd_input()
 {
 	int ret = 0;
+	int size = 0;
 	
 	fd = open(file, O_RDONLY);
 	//fp_r = fopen(file, "r")
@@ -31,19 +32,20 @@ void* thrd_input()
 	while(1){
 		memset(buffer1, 0, sizeof(buffer1));
 		
-		ret = read(fd, buffer1, sizeof(buffer1));
+		size = read(fd, buffer1, sizeof(buffer1));
 		printf("read ret = %d\n", ret);
-		if(ret < 0) {
+		if(size < 0) {
 			printf("Cannot read from file.\n");
 			flags = 1;
 			pthread_exit(NULL);
 			//return (void *)(-1);
-		} else if (ret == 0) {
+		} else if (size == 0) {
 			printf("read ok.\n");
 			break;
 		} else {
-		redo:
+		rewrite:
 			pthread_mutex_lock(&iolock);
+			/*
 			if(ring_buffer_datasize(&ring_buffer) == ring_buffer_buffersize(&ring_buffer))
 			{
 				pthread_mutex_unlock(&iolock);
@@ -51,6 +53,16 @@ void* thrd_input()
 				goto redo;
 			}
 			ring_buffer_write(&ring_buffer,  (uint8_t *)buffer1, ret);
+			*/
+			
+			ret = write_data(&ring_buffer,  (uint8_t *)buffer1, size);
+			if(-1 == ret || 0 == ret) 
+			{
+				pthread_mutex_unlock(&iolock);
+				usleep(1);
+				goto rewrite;
+			}
+			
 			pthread_mutex_unlock(&iolock);
 		}
 	}
@@ -63,6 +75,7 @@ void* thrd_input()
 void* thrd_output()
 {
     int ret = 0;
+	int size = 0;
 	fd2 = open("./1.mkv", O_WRONLY | O_CREAT | O_TRUNC);
 	if(fd < 0){
 		printf("Cannot open file.\n");
@@ -72,7 +85,9 @@ void* thrd_output()
 	
 	while(1){
 		memset(buffer2, 0, sizeof(buffer2));
+	reread:
 		pthread_mutex_lock(&iolock);
+		/*
 		ret = ring_buffer_datasize(&ring_buffer);
 		if(ret == 0)
 		{
@@ -92,6 +107,27 @@ void* thrd_output()
 		} else {
 			//error
 			pthread_mutex_unlock(&iolock);
+		}
+		*/
+		ret = read_data(&ring_buffer,  (uint8_t *)buffer2, sizeof(buffer2));
+		size = ret;
+		if(0 == ret )
+		{
+			pthread_mutex_unlock(&iolock);
+			if(1 == flags) 
+			{
+				break;
+			}
+			else 
+			{
+				usleep(1);
+				goto reread;
+			}
+		}
+		else 
+		{
+			pthread_mutex_unlock(&iolock);
+			write(fd2, buffer2, size);
 		}
 		
 	}

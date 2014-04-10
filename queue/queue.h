@@ -23,6 +23,8 @@ void ring_buffer_free(RingBufferContext* ctx);
 int ring_buffer_datasize(RingBufferContext* ctx);
 int ring_buffer_buffersize(RingBufferContext* ctx);
 int ring_buffer_freesize(RingBufferContext* ctx);
+int read_data(RingBufferContext* ctx, uint8_t* buffer, int buf_size);
+int write_data(RingBufferContext* ctx, uint8_t* buffer, int buf_size);
 
 
 #endif //QUEUE_H_

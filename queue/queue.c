@@ -3,16 +3,41 @@
 int read_data(RingBufferContext* ctx, uint8_t* buffer, int buf_size)
 {
 	int ret = 0, datasize = 0, size = 0;
-	datasize = ring_buffer_datasize(&ring_buffer);
+	datasize = ring_buffer_datasize(ctx);
 	size = datasize;
 	
 	if(size <= 0)
 		return 0;
 	else if(size > buf_size) 
 	{
-		
+		size = buf_size;
 	}
 	
+	ret = ring_buffer_read(ctx, buffer, size);
+	
+	return ret;
+}
+
+int write_data(RingBufferContext* ctx, uint8_t* buffer, int buf_size)
+{
+	int ret = 0;
+	int freesize = ring_buffer_freesize(ctx);
+	int size = freesize;
+	
+	if(size <= 0)
+		return 0;
+	else if (size >= buf_size) 
+		size = buf_size;
+	else //freesize < buf_size
+		return -1;
+	
+	ret = ring_buffer_write(ctx, buffer, buf_size);
+	if(0 == ret)
+		ret = size;
+	else
+		ret = 0;
+	
+	return ret;
 }
 
 int ring_buffer_write(RingBufferContext* ctx, uint8_t* buffer, int size)
