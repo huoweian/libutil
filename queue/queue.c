@@ -14,6 +14,10 @@ int read_data(RingBufferContext* ctx, uint8_t* buffer, int buf_size)
 	}
 	
 	ret = ring_buffer_read(ctx, buffer, size);
+	if(ret == 0)
+		ret = size;
+	else
+		ret =0;
 	
 	return ret;
 }
@@ -29,9 +33,11 @@ int write_data(RingBufferContext* ctx, uint8_t* buffer, int buf_size)
 	else if (size >= buf_size) 
 		size = buf_size;
 	else //freesize < buf_size
+	{
+		//size = freesize;
 		return -1;
-	
-	ret = ring_buffer_write(ctx, buffer, buf_size);
+	}
+	ret = ring_buffer_write(ctx, buffer, size);
 	if(0 == ret)
 		ret = size;
 	else
@@ -102,31 +108,11 @@ int ring_buffer_read(RingBufferContext* ctx, uint8_t* buffer, int size)
 				ctx->data_ptr = ctx->buffer_base;
 			}
 		}
-		return size;
+		return 0;
 	}
 	else
 	{
-		if(rptr2 > ctx->buffer_end)
-		{
-			int size0 = ctx->buffer_end - ctx->data_ptr;
-			int size1 = rptr2 - ctx->buffer_end; 
-			memcpy(buffer, ctx->data_ptr, size0);
-			memcpy(buffer+size0, ctx->buffer_base, size1);
-			ctx->data_ptr = ctx->buffer_base + size1;
-			ctx->data_size -= data_size;
-		}
-		else
-		{
-			memcpy(buffer, ctx->data_ptr, ctx->data_size);
-			ctx->data_ptr = ctx->data_ptr + size;
-			ctx->data_size -= data_size;
-			if(ctx->data_ptr >= ctx->buffer_end)
-			{
-				ctx->data_ptr = ctx->buffer_base;
-			}
-		}
-		return data_size;
-		//return -1;
+		return -1;
 	}
 }
 

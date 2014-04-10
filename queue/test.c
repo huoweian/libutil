@@ -56,7 +56,7 @@ void* thrd_input()
 			*/
 			
 			ret = write_data(&ring_buffer,  (uint8_t *)buffer1, size);
-			if(-1 == ret || 0 == ret) 
+			if(0 == ret || -1 == ret) 
 			{
 				pthread_mutex_unlock(&iolock);
 				usleep(1);
